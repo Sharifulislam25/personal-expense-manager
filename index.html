@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Personal Expense Manager - Quick, minimal, and private expense tracking saved only on your device.">
+    <title>Personal Expense Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <!-- Onboarding Screen -->
+    <div class="onboarding" id="onboarding">
+        <div class="onboarding-card">
+            <div class="onboarding-icon"><img src="logo.jpg" alt="Personal Expense Manager Logo"></div>
+            <h2>Welcome to Personal Expense Manager</h2>
+            <p>Add expenses in seconds. Your data stays on this device (local storage) until you delete it here. No
+                accounts, no servers.</p>
+            <div class="onboarding-actions">
+                <button class="btn btn-primary" onclick="startTracking()">Start tracking</button>
+                <button class="btn btn-secondary" onclick="startTour()">Take a quick tour</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="brand">
+                <div class="brand-icon"><img src="logo.jpg" alt="Logo"></div>
+                <div>
+                    <h1>Personal Expense Manager</h1>
+                    <p>Quick. Minimal. Private — saved only on this device.</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="local-badge">
+                    <span>Saved locally</span>
+                </div>
+                <button class="theme-toggle" id="themeToggle" title="Toggle theme" aria-label="Toggle light/dark theme">
+                    <svg id="themeIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="expenses">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                    </path>
+                </svg>
+                Expenses
+            </button>
+            <button class="tab-btn" data-tab="trash">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                    </path>
+                </svg>
+                Trash
+                <span class="badge" id="trashBadge" style="display: none;">0</span>
+            </button>
+        </div>
+
+        <!-- Expenses Tab -->
+        <div class="tab-content active" id="expensesTab">
+            <!-- Dashboard Cards -->
+            <div class="dashboard-cards">
+                <div class="stat-card">
+                    <h3>Today</h3>
+                    <div class="value" id="todayTotal">৳ 0.00</div>
+                    <div class="sparkline-container">
+                        <canvas id="sparkline"></canvas>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>This Month</h3>
+                    <div class="value" id="monthTotal">৳ 0.00</div>
+                    <p class="hint">Small 7-day spending trend</p>
+                </div>
+            </div>
+
+            <!-- Quick Add -->
+            <div class="quick-add">
+                <h2>Quick Add</h2>
+                <form class="add-form" id="addForm">
+                    <div class="form-group">
+                        <label for="amount">Amount</label>
+                        <input type="number" id="amount" placeholder="Amount (e.g. 12.50)" step="0.01" min="0" required
+                            aria-label="Amount in Taka">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" class="filter-select" aria-label="Choose category">
+                            <option value="General">General</option>
+                            <option value="Food">Food</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Bills">Bills</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Health">Health</option>
+                            <option value="Education">Education</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="note">Note</label>
+                        <input type="text" id="note" placeholder="Note (optional)" aria-label="Note">
+                    </div>
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input type="date" id="date" required aria-label="Date">
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary" title="Add expense (Enter)">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Add
+                        </button>
+                    </div>
+                </form>
+                <p class="hint">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Press Enter in the amount field to add quickly.
+                </p>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters">
+                <div class="search-wrapper">
+                    <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Search notes, merchant, category…"
+                        aria-label="Search transactions">
+                </div>
+                <select id="categoryFilter" class="filter-select" aria-label="Filter by category">
+                    <option value="All">All Categories</option>
+                    <option value="Food">Food</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Shopping">Shopping</option>
+                    <option value="Bills">Bills</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Health">Health</option>
+                    <option value="Education">Education</option>
+                    <option value="General">General</option>
+                </select>
+                <div class="form-group" style="margin: 0;">
+                    <input type="date" id="dateFrom" aria-label="Filter from date" style="width: 140px;">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <input type="date" id="dateTo" aria-label="Filter to date" style="width: 140px;">
+                </div>
+                <div class="quick-filters">
+                    <button class="quick-filter-btn active" data-filter="all">All</button>
+                    <button class="quick-filter-btn" data-filter="today">Today</button>
+                    <button class="quick-filter-btn" data-filter="week">This week</button>
+                    <button class="quick-filter-btn" data-filter="month">This month</button>
+                </div>
+            </div>
+
+            <!-- Insights -->
+            <div class="insights">
+                <h2>📊 Insights</h2>
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>Spending over time</h3>
+                        <div class="chart-container">
+                            <canvas id="lineChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Spending by category</h3>
+                        <div class="chart-container">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transactions List -->
+            <div class="transactions">
+                <div class="transactions-header">
+                    <h2>💳 Transactions</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="exportCSV()"
+                            title="Download a CSV of your transactions">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                </path>
+                            </svg>
+                            Export CSV
+                        </button>
+                        <label class="btn btn-secondary" title="Upload transactions from a CSV">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                            </svg>
+                            Import CSV
+                            <input type="file" accept=".csv" onchange="importCSV(event)" class="sr-only">
+                        </label>
+                        <button class="btn btn-danger" onclick="showDeleteAllModal()" title="Delete all app data">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                </path>
+                            </svg>
+                            Delete app data
+                        </button>
+                    </div>
+                </div>
+                <div class="transaction-list" id="transactionList">
+                    <!-- Transactions will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Trash Tab -->
+        <div class="tab-content" id="trashTab">
+            <div class="transactions">
+                <div class="transactions-header">
+                    <h2>🗑️ Trash</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="selectAllTrash()">Select All</button>
+                        <button class="btn btn-danger" onclick="emptyTrash()">Empty Trash</button>
+                    </div>
+                </div>
+                <!-- Bulk Actions Bar -->
+                <div class="bulk-actions hidden" id="bulkActions">
+                    <span id="selectedCount">0 selected</span>
+                    <button class="btn btn-success" onclick="restoreSelected()">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                        </svg>
+                        Restore Selected
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteSelected()">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Delete Selected
+                    </button>
+                    <button class="btn btn-secondary" onclick="deselectAllTrash()">Cancel</button>
+                </div>
+                <div class="transaction-list" id="trashList">
+                    <!-- Trash items will be rendered here -->
+                </div>
+            </div>
+            <p class="hint" style="margin-top: 1rem; text-align: center;">
+                Items in trash are automatically deleted after 7 days.
+            </p>
+        </div>
+    </main>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <h3>Edit transaction</h3>
+            <form class="edit-form" id="editForm">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="editAmount">Amount</label>
+                    <input type="number" id="editAmount" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="editCategory">Category</label>
+                    <select id="editCategory">
+                        <option value="General">General</option>
+                        <option value="Food">Food</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Bills">Bills</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Health">Health</option>
+                        <option value="Education">Education</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editNote">Note</label>
+                    <input type="text" id="editNote">
+                </div>
+                <div class="form-group">
+                    <label for="editDate">Date</label>
+                    <input type="date" id="editDate" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()"
+                        title="Discard changes">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete All Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <h3>Delete local data?</h3>
+            <p>This will permanently remove all transactions from this device. This cannot be undone.</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="deleteAllData()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Single Transaction Modal -->
+    <div class="modal-overlay" id="deleteSingleModal">
+        <div class="modal">
+            <h3>Move to trash?</h3>
+            <p>This transaction will be moved to trash and automatically deleted after 7 days. You can restore it before
+                then.</p>
+            <input type="hidden" id="deleteSingleId">
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeDeleteSingleModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmDeleteSingle()">Move to Trash</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty Trash Confirmation Modal -->
+    <div class="modal-overlay" id="emptyTrashModal">
+        <div class="modal">
+            <h3>Empty trash?</h3>
+            <p>This will permanently delete all items in trash. This cannot be undone.</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeEmptyTrashModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmEmptyTrash()">Empty Trash</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <p>Developed by <strong>Shariful Islam</strong></p>
+        <div class="social-links">
+            <a href="https://github.com/Sharifulislam25" target="_blank" rel="noopener noreferrer" title="GitHub"
+                class="social-link">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                </svg>
+            </a>
+            <a href="https://www.linkedin.com/in/shariful-islam-75ab45243/" target="_blank" rel="noopener noreferrer"
+                title="LinkedIn" class="social-link">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                </svg>
+            </a>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
